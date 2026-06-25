@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organik Ürün Yönetim Paneli</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c5e43;
+            --primary-light: #3d855c;
+            --bg: #f4f7f6;
+            --white: #ffffff;
+            --text: #333333;
+            --danger: #d9534f;
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 20px;
+            color: var(--text);
+        }
+
+        .dashboard-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Üst Bar */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--primary);
+            color: var(--white);
+            padding: 15px 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 22px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logout-btn {
+            background: rgba(255,255,255,0.15);
+            color: var(--white);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .logout-btn:hover {
+            background: var(--danger);
+            border-color: var(--danger);
+        }
+
+        /* Yan Yana Duran Kutular */
+        .dashboard-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 25px;
+        }
+
+        .panel-box {
+            background-color: var(--white);
+            padding: 25px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            flex: 1;
+            min-width: 300px;
+        }
+
+        h2 {
+            color: var(--primary);
+            margin-top: 0;
+            font-size: 18px;
+            border-bottom: 2px solid #f4f7f6;
+            padding-bottom: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Anahtar Değer Göstergeleri */
+        .system-meta-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px dashed #eee;
+            font-size: 14px;
+        }
+
+        .system-meta-row span:first-child {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .system-meta-row span:last-child {
+            font-family: 'Courier New', Courier, monospace;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Form Elemanları */
+        .form-group {
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #555;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        input[type="file"] {
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: border 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background-color: var(--primary-light);
+        }
+
+        /* Tablo Tasarımı */
+        .table-wrapper {
+            overflow-x: auto;
+            background: var(--white);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8faf9;
+            color: var(--primary);
+            padding: 14px 12px;
+            font-weight: 700;
+            border-bottom: 2px solid #eaeaea;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .td-img img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .btn-delete {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: opacity 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-delete:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+
+<body id="adminBody" style="display: none;">
+
+    <div class="dashboard-container">
+        
+        <header class="dashboard-header">
+            <h1><i class="fas fa-leaf"></i> Doğal Çiftlik | Yönetici Paneli</h1>
+            <button class="logout-btn" onclick="localStorage.removeItem('admin_token'); window.location.href='admin-login.html';">
+                <i class="fas fa-sign-out-alt"></i> Güvenli Çıkış
+            </button>
+        </header>
+
+        <div class="dashboard-row">
+            <div class="panel-box">
+                <h2><i class="fas fa-server"></i> Sistem & Entegrasyon Bilgileri</h2>
+                <div class="system-meta-row">
+                    <span>Çekirdek Sistem Durumu:</span>
+                    <span style="color: #4caf50;"><i class="fas fa-circle-check"></i> Aktif</span>
+                </div>
+                <div class="system-meta-row">
+                    <span>Sistem Hızı (Tick Rate):</span>
+                    <span id="tickRate">0 Hz</span>
+                </div>
+                <div class="system-meta-row">
+                    <span>Telegram Bot Token:</span>
+                    <span id="keyToken" style="font-size:11px;">Yükleniyor...</span>
+                </div>
+                <div class="system-meta-row">
+                    <span>Market Chat ID:</span>
+                    <span id="keyMarket">Yükleniyor...</span>
+                </div>
+                <div class="system-meta-row">
+                    <span>Kurye Chat ID:</span>
+                    <span id="keyKurye">Yükleniyor...</span>
+                </div>
+            </div>
+
+            <div class="panel-box">
+                <h2><i class="fas fa-plus-circle"></i> Yeni Organik Ürün Ekle</h2>
+                <div class="form-group">
+                    <label for="productName">Ürün Adı:</label>
+                    <input type="text" id="productName" placeholder="Örn: Süzme Köy Yoğurdu">
+                </div>
+                <div class="form-group">
+                    <label for="productValue">Fiyat (TL):</label>
+                    <input type="number" id="productValue" placeholder="Örn: 150">
+                </div>
+                <div class="form-group">
+                    <label for="productImage">Ürün Görseli Seçin:</label>
+                    <input type="file" id="productImage" accept="image/*">
+                </div>
+                <button class="btn-submit" onclick="urunEkle()"><i class="fas fa-save"></i> Ürünü Veritabanına Kaydet</button>
+            </div>
+        </div>
+
+        <div class="panel-box" style="margin-top: 20px;">
+            <h2><i class="fas fa-boxes-stacked"></i> Veritabanındaki Güncel Ürünler</h2>
+            <div class="table-wrapper">
+                <table id="urunTablosu">
+                    <thead>
+                        <tr>
+                            <th>Görsel</th>
+                            <th>Ürün Adı</th>
+                            <th>Fiyat (TL)</th>
+                            <th style="text-align: center;">İşlem</th>
+                        </tr>
+                    </thead>
+                    <tbody id="urunListesi">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #666; padding: 20px;">
+                                <i class="fas fa-spinner fa-spin"></i> Ürün verileri yükleniyor...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+
+</html>

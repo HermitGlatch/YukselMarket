@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doğal Çiftlik | Yönetim Paneli</title>
+    <!-- FontAwesome ve Google Fonts (Poppins) entegrasyonu -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #1a5f3c;
+            --primary-light: #2e7d32;
+            --primary-dark: #0e3a24;
+            --accent: #ff9800;
+            --bg-gradient: linear-gradient(135deg, #113823 0%, #1a5f3c 50%, #2e7d32 100%);
+            --text-dark: #212529;
+            --text-muted: #6c757d;
+            --error-bg: #fff5f5;
+            --error-border: #ffe3e3;
+            --error-text: #e03131;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Arka plan estetiği için dekoratif organik halkalar */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.03);
+            z-index: 0;
+        }
+        body::before { top: -100px; left: -100px; }
+        body::after { bottom: -100px; right: -100px; }
+
+        .login-wrapper {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 420px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.96);
+            padding: 45px 35px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25), 
+                        0 1px 3px rgba(255, 255, 255, 0.1) inset;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .brand-header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        .icon-circle {
+            width: 70px;
+            height: 70px;
+            background: rgba(26, 95, 60, 0.1);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            margin: 0 auto 15px auto;
+            box-shadow: 0 8px 16px rgba(26, 95, 60, 0.05);
+            transition: transform 0.3s ease;
+        }
+
+        .login-container:hover .icon-circle {
+            transform: scale(1.05) rotate(5deg);
+        }
+
+        h2 {
+            color: var(--primary-dark);
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #343a40;
+            font-size: 13.5px;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            color: #adb5bd;
+            font-size: 16px;
+            transition: color 0.3s ease;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 16px 14px 46px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            font-size: 14.5px;
+            font-weight: 400;
+            color: var(--text-dark);
+            background-color: #f8f9fa;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        #password {
+            padding-right: 46px;
+        }
+
+        input:focus {
+            border-color: var(--primary);
+            background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(26, 95, 60, 0.12);
+            outline: none;
+        }
+
+        input:focus + .input-icon {
+            color: var(--primary);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            cursor: pointer;
+            color: #adb5bd;
+            font-size: 16px;
+            padding: 5px;
+            transition: color 0.2s;
+        }
+
+        .toggle-password:hover {
+            color: var(--primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(26, 95, 60, 0.2);
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        button:hover {
+            background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-dark) 100%);
+            box-shadow: 0 10px 24px rgba(26, 95, 60, 0.3);
+            transform: translateY(-1px);
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        button:disabled {
+            background: #ced4da;
+            color: #6c757d;
+            box-shadow: none;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .error-msg {
+            color: var(--error-text);
+            background-color: var(--error-bg);
+            border: 1px solid var(--error-border);
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* Animasyonlar */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 0.3px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-wrapper">
+        <div class="login-container">
+            <div class="brand-header">
+                <div class="icon-circle">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <h2>Doğal Çiftlik</h2>
+                <div class="subtitle">Yönetim Paneli Güvenli Girişi</div>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label for="username">Kullanıcı Adı</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" id="username" placeholder="Kullanıcı adınızı yazın" autocomplete="username" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Şifre</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password" placeholder="Şifrenizi yazın" autocomplete="current-password" required>
+                        <i class="fas fa-eye toggle-password" id="passwordIcon" onclick="togglePasswordVisibility()"></i>
+                    </div>
+                </div>
+
+                <button type="submit" id="submitBtn">
+                    <span id="btnText">Sisteme Giriş Yap</span>
+                    <i class="fas fa-arrow-right-to-bracket"></i>
+                </button>
+                
+                <div id="errorMsg" class="error-msg"></div>
+            </form>
+        </div>
+        <div class="copyright">© 2026 Doğal Çiftlik Otomasyonu. Tüm Hakları Saklıdır.</div>
+    </div>
+
+    <script>
+        let failedAttempts = 0;
+        let lockTimer = null;
+
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById("password");
+            const passwordIcon = document.getElementById("passwordIcon");
+
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                passwordIcon.classList.replace("fa-eye", "fa-eye-slash");
+            } else {
+                passwordInput.type = "password";
+                passwordIcon.classList.replace("fa-eye-slash", "fa-eye");
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+
+            const kadi = document.getElementById("username").value.trim();
+            const sifre = document.getElementById("password").value.trim();
+            const errorMsg = document.getElementById("errorMsg");
+            const submitBtn = document.getElementById("submitBtn");
+            const btnText = document.getElementById("btnText");
+
+            if (failedAttempts >= 3) {
+                showError("⚠️ Güvenlik protokolü devrede. Çok fazla hatalı deneme yaptınız.");
+                return;
+            }
+
+            if (!kadi || !sifre) {
+                showError("Lütfen tüm alanları doldurun.");
+                return;
+            }
+
+            // Arayüz yükleniyor durumu
+            submitBtn.disabled = true;
+            btnText.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Doğrulanıyor...';
+            errorMsg.style.display = "none";
+
+            // API Bağlantısı
+            fetch('/api/admin-login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username: kadi, password: sifre })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    failedAttempts = 0;
+                    localStorage.setItem("admin_token", data.token);
+                    window.location.href = "admin.html";
+                } else {
+                    failedAttempts++;
+                    showError(data.message || "Giriş bilgileri hatalı, lütfen kontrol edin.");
+                    
+                    if (failedAttempts >= 3) {
+                        startLockdown();
+                    } else {
+                        resetButton();
+                    }
+                }
+            })
+            .catch(err => {
+                console.error("Bağlantı Hatası:", err);
+                showError("Sunucuyla güvenli bağlantı kurulamadı.");
+                resetButton();
+            });
+        }
+
+        function showError(text) {
+            const errorMsg = document.getElementById("errorMsg");
+            errorMsg.innerText = text;
+            errorMsg.style.display = "block";
+            // Her hata mesajında sallantı animasyonunu tetikle
+            errorMsg.style.animation = 'none';
+            errorMsg.offsetHeight; // Reflow tetikleme
+            errorMsg.style.animation = 'shake 0.4s ease-in-out';
+        }
+
+        function resetButton() {
+            const submitBtn = document.getElementById("submitBtn");
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<span id="btnText">Sisteme Giriş Yap</span> <i class="fas fa-arrow-right-to-bracket"></i>';
+        }
+
+        function startLockdown() {
+            const submitBtn = document.getElementById("submitBtn");
+            let timeLeft = 30;
+
+            submitBtn.disabled = true;
+
+            lockTimer = setInterval(() => {
+                timeLeft--;
+                submitBtn.innerHTML = `<i class="fas fa-lock"></i> Kilitlendi (${timeLeft}s)`;
+
+                if (timeLeft <= 0) {
+                    clearInterval(lockTimer);
+                    failedAttempts = 0;
+                    resetButton();
+                    document.getElementById("errorMsg").style.display = "none";
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+
+</html>

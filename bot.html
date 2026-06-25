@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sipariş Asistanı | Doğal Çiftlik</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="bot.css">
+</head>
+
+<body>
+
+<header>
+        <div class="header-left">
+            <a href="index.html" class="back-btn" title="Geri Dön"><i class="fas fa-arrow-left"></i></a>
+        </div>
+        <div class="bot-info">
+            <h3>Sipariş Asistanı</h3>
+            <p style="font-size: 12px; opacity: 0.8;">Doğal Çiftlik Otomasyonu</p>
+        </div>
+    </header>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <!-- Mesajlar dinamik olarak yüklenecek -->
+        </div>
+
+        <!-- ADRES MODÜLÜ -->
+        <div class="address-form" id="addressForm" style="display: none;">
+            <h4><i class="fas fa-truck"></i> Teslimat Yöntemi Seçin</h4>
+            
+            <div class="main-options-buttons" id="mainMethodButtons">
+                <button type="button" class="btn-method" onclick="selectMethod('gps')">
+                    <i class="fas fa-location-crosshairs"></i> 1. Telefon Konumumu Al
+                </button>
+                <button type="button" class="btn-method" onclick="selectMethod('list')">
+                    <i class="fas fa-city"></i> 2. Listeden Mahallemi Seç
+                </button>
+                <button type="button" class="btn-method" onclick="selectMethod('manual')">
+                    <i class="fas fa-pen-to-square"></i> 3. Adresimi Kendim Yazacağım
+                </button>
+            </div>
+
+            <!-- ALT ALAN 1: GPS -->
+            <div id="gpsSubArea" class="sub-form-area" style="display: none;">
+                <div class="gps-loading-status" id="gpsStatusText">
+                    <i class="fas fa-satellite-dish fa-spin"></i> Uydu bağlantısı kuruluyor...
+                </div>
+                <div id="gpsConfirmationBox" style="display: none;">
+                    <p class="confirm-title">📍 Bulunan Adresiniz Bu mu?</p>
+                    <div class="found-address-text" id="foundAddressPreview">...</div>
+                    <div class="confirm-actions">
+                        <button class="btn-confirm-yes" onclick="confirmGps(true)">EVET (Kullan)</button>
+                        <button class="btn-confirm-no" onclick="confirmGps(false)">HAYIR (Vazgeç)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ALT ALAN 2: LİSTE -->
+            <div id="listSubArea" class="sub-form-area" style="display: none;">
+                <div class="form-group-easy">
+                    <label>1. İl Seçin:</label>
+                    <select id="selectIl" onchange="handleIlChange()">
+                        <option value="">-- İl Seçin --</option>
+                        <option value="Manisa">Manisa</option>
+                        <option value="İzmir">İzmir</option>
+                    </select>
+                </div>
+                <div class="form-group-easy">
+                    <label>2. İlçe Seçin:</label>
+                    <select id="selectIlce" onchange="handleIlceChange()" disabled>
+                        <option value="">-- Önce İl Seçin --</option>
+                    </select>
+                </div>
+                <div class="form-group-easy">
+                    <label>3. Mahalle Seçin:</label>
+                    <select id="selectMahalle" onchange="handleMahalleChange()" disabled>
+                        <option value="">-- Önce İlçe Seçin --</option>
+                    </select>
+                </div>
+                <div class="form-group-easy" id="buildingDetailsGroup" style="display: none;">
+                    <label>4. Apartman Adı, Blok, Kapı ve Daire No:</label>
+                    <textarea id="listBuildingDetails" rows="2" placeholder="Örn: Huzur Apartmanı, B Blok, No:12 Daire:4"></textarea>
+                    <button class="btn-address-save" style="margin-top: 10px;" onclick="saveListAddress()">Adresi Onayla</button>
+                </div>
+            </div>
+
+            <!-- ALT ALAN 3: MANUEL -->
+            <div id="manualSubArea" class="sub-form-area" style="display: none;">
+                <div class="form-group-easy">
+                    <label>Açık Adresinizi Yazın:</label>
+                    <textarea id="manualAddressInput" rows="3" placeholder="Örn: Atatürk Mah. 503 Sokak No:15 Daire:2 Merkez/Manisa"></textarea>
+                </div>
+                <button class="btn-address-save" onclick="saveManualAddress()">Adresi Onayla</button>
+            </div>
+
+            <button type="button" class="btn-back-to-options" id="btnBackToMethods" onclick="resetToMainOptions()" style="display: none;">
+                <i class="fas fa-rotate-left"></i> Farklı Bir Yöntem Seç
+            </button>
+        </div>
+
+        <!-- ÖDEME YÖNTEMİ SEÇİM MODÜLÜ -->
+        <div class="address-form" id="paymentForm" style="display: none;">
+            <h4><i class="fas fa-credit-card"></i> Ödeme Yöntemi Seçin</h4>
+            <div class="main-options-buttons">
+                <button type="button" class="btn-method payment-btn" onclick="selectPayment('Kart')">
+                    <i class="fas fa-credit-card"></i> Kredi / Banka Kartı (Kapıda)
+                </button>
+                <button type="button" class="btn-method payment-btn" onclick="selectPayment('Nakit')">
+                    <i class="fas fa-money-bill-wave"></i> Nakit Ödeme (Kapıda)
+                </button>
+                <button type="button" class="btn-method payment-btn" onclick="selectPayment('Belli Değil')">
+                    <i class="fas fa-question-circle"></i> Belli Değil / Fark Etmez
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="userInput" placeholder="Mesajınızı yazın..." onkeypress="handleKeyPress(event)">
+            <button class="btn-send" id="btnSend" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+        </div>
+    </div>
+
+    <script src="bot.js"></script>
+</body>
+
+</html>
