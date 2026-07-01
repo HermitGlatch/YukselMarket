@@ -48,29 +48,7 @@ const db = new sqlite3.Database("./Organic.db", (hata) => {
 
 function tablolariKur() {
   // 1. Admin Kullanıcıları Tablosu
-  db.run(
-    `CREATE TABLE IF NOT EXISTS admin_users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL
-    )`,
-    (err) => {
-      if (!err) {
-        // Varsayılan admin hesabı ekle (Eğer yoksa)
-        db.get(
-          `SELECT * FROM admin_users WHERE username = 'admin'`,
-          [],
-          (err, row) => {
-            if (!row) {
-              db.run(
-                `INSERT INTO admin_users (username, password) VALUES ('admin', 'admin123')`,
-              );
-            }
-          },
-        );
-      }
-    },
-  );
+ 
 
   // 2. Ürünler Tablosu
   db.run(`CREATE TABLE IF NOT EXISTS urunler (
