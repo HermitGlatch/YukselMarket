@@ -139,7 +139,6 @@ function renderProductsFromCache() {
 
 // === SEPETE EKLEME MEKANİZMASI (TAMAMEN DİNAMİK YAPILDI) ===
 function addToCart(id, name, price, image) {
-  // ID kontrolünü sepet içerisinde aratıyoruz
   const existingItem = cart.find((item) => item.id === id);
 
   if (existingItem) {
@@ -157,9 +156,11 @@ function addToCart(id, name, price, image) {
   saveCart();
   updateCartUI();
 
-  // Sepet açıldığında paneli otomatik gösterir
-  const sidebar = document.getElementById("cartSidebar");
-  if (sidebar) sidebar.classList.add("open");
+  // SADECE masaüstü ekranlarda (768px üzeri) sepeti otomatik aç
+  if (window.innerWidth > 768) {
+    const sidebar = document.getElementById("cartSidebar");
+    if (sidebar) sidebar.classList.add("open");
+  }
 }
 
 function removeFromCart(id) {
