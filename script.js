@@ -103,15 +103,19 @@ function renderProductsFromCache() {
       const price = Number(product.fiyat);
       // Eğer görsel yolu bozuksa veya null ise varsayılan görseli göstererek 404 hatasını önleriz
       const image =
-        product.gorsel &&
-        product.gorsel.trim() !== "" &&
-        !product.gorsel.includes("photo-")
+        product.gorsel && product.gorsel.trim() !== ""
           ? product.gorsel
           : "images/default.png";
       const kategoriEtiketi =
         (product.kategoriIsimleri || []).length > 0
           ? product.kategoriIsimleri[0]
           : "Taze Ürün";
+      // Her ürünün kendi açıklaması var artık (admin panelinden girilir).
+      // Boşsa sabit/tekrarlayan bir metin yerine kısa nötr bir ifade gösteriyoruz.
+      const aciklama =
+        product.aciklama && product.aciklama.trim() !== ""
+          ? product.aciklama
+          : "Bu ürün için henüz açıklama eklenmedi.";
       return `
                     <div class="product-card">
                         <span class="product-tag">${kategoriEtiketi}</span>
@@ -120,7 +124,7 @@ function renderProductsFromCache() {
                         </div>
                         <div class="product-info">
                             <h3 class="product-title">${name}</h3>
-                            <p class="product-desc">Çiftliğimizden günlük, tamamen doğal ve katkısız üretim.</p>
+                            <p class="product-desc">${aciklama}</p>
                             <div class="product-meta">
                                 <span class="product-size"><i class="fas fa-balance-scale"></i> Standart</span>
                             </div>

@@ -176,6 +176,7 @@ function yeniUrunKategoriToggle(id, seciliMi) {
 function urunEkle() {
   const urunAdi = document.getElementById("productName").value.trim();
   const urunFiyati = document.getElementById("productValue").value;
+  const urunAciklamasi = document.getElementById("productDescription").value.trim();
   const dosyaGirdisi = document.getElementById("productImage");
 
   if (!urunAdi || !urunFiyati) {
@@ -186,6 +187,7 @@ function urunEkle() {
   const formData = new FormData();
   formData.append("isim", urunAdi);
   formData.append("fiyat", Number(urunFiyati));
+  formData.append("aciklama", urunAciklamasi);
   // Seçilen kategoriler JSON dizi olarak tek bir alanda gönderiliyor.
   // (Aynı isimde birden fazla form alanı göndermek tarayıcıya/sunucuya göre farklı
   // ayrıştırılabiliyordu, bu da "bişey değiştirince ekleme bozuluyor" sorununun
@@ -212,6 +214,7 @@ function urunEkle() {
       alert("Ürün başarıyla eklendi!");
       document.getElementById("productName").value = "";
       document.getElementById("productValue").value = "";
+      document.getElementById("productDescription").value = "";
       dosyaGirdisi.value = "";
       yeniUrunSecilenKategoriler = [];
       urunEkleKategoriKutulariniCiz();
@@ -308,7 +311,7 @@ function urunTablosunuCiz() {
                     <td><img src="${urun.gorsel || "images/default.png"}" alt="${urun.isim}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;" onerror="this.src='images/default.png'"></td>
                     <td style="font-weight:600;">${urun.isim}</td>
                     <td>${kategoriEtiketleri}</td>
-                    <td style="font-weight:bold;color:#1a5f3c;">${urun.fiyat} TL</td>
+                    <td style="font-weight:bold;color:#1f4d36;">${urun.fiyat} TL</td>
                     <td><button onclick="urunSil(${urun.id})" style="background:#a94442;color:white;border:none;padding:6px 12px;border-radius:4px;cursor:pointer;">Sil</button></td>
                 </tr>
             `;

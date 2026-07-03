@@ -6,6 +6,69 @@ const multer = require("multer");
 const app = express();
 const PORT = 3000;
 
+// --- IP BAN KONTROLÜ (statik dosyalardan ÖNCE çalışmalı, yoksa banlı IP
+// index.html'i statik sunucudan doğrudan alır ve bu kontrole hiç uğramaz) ---
+// Admin panelinin kendisi hiçbir zaman engellenmez; aksi halde banlı bir IP
+// admin panelini de göremez ve kendi banını kaldıramaz.
+const BANDAN_MUAF_ON_EKLER = [
+  "/admin.html",
+  "/admin.js",
+  "/admin-login.html",
+  "/api/admin-login",
+  "/api/ip-loglari",
+  "/api/ip-banla",
+  "/api/ip-ban-kaldir",
+  "/api/ip-loglarini-temizle",
+  "/api/banli-ipler",
+  "/api/sistem-durumu",
+  "/api/telegram-ayarlari",
+];
+
+app.use((req, res, next) => {
+  if (BANDAN_MUAF_ON_EKLER.some((yol) => req.path.startsWith(yol))) {
+    return next();
+  }
+
+  const ipBasligi = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "";
+  // IPv6'dan IPv4 çıkarımı (::ffff:127.0.0.1 -> 127.0.0.1) ve olası çoklu IP listesinden ilkini al
+  const cleanIp = ipBasligi.split(",")[0].trim().replace("::ffff:", "");
+  req.cleanIp = cleanIp;
+
+  db.get(`SELECT * FROM banli_ipler WHERE ip = ?`, [cleanIp], (hata, banli) => {
+    if (hata) {
+      // Veritabanı sorgusu başarısız olsa bile siteyi tamamen kilitlemeyelim
+      console.error("Ban kontrolü sırasında hata:", hata.message);
+      return next();
+    }
+
+    if (banli) {
+      return res
+        .status(403)
+        .send(
+          `<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><title>Erişim Engellendi</title>
+          <style>body{font-family:'Segoe UI',sans-serif;background:#1f4d36;color:#fbf6ec;display:flex;
+          align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;padding:20px;}
+          .kutu{max-width:420px;} h1{font-size:26px;margin-bottom:10px;} p{opacity:0.85;line-height:1.6;}</style>
+          </head><body><div class="kutu"><h1>🚫 Erişiminiz Engellendi</h1>
+          <p>Bu IP adresi (${cleanIp}) yönetici tarafından banlanmıştır. Bir hata olduğunu düşünüyorsanız
+          bizimle iletişime geçin.</p></div></body></html>`,
+        );
+    }
+
+    // Banlı değilse, sadece ana sayfa ziyaretlerini logla (statik dosya/istek
+    // spamiyle log tablosunu şişirmemek için)
+    if (req.path === "/" || req.path === "/index.html") {
+      const tarih = new Date().toISOString();
+      db.run(`INSERT INTO ip_loglari (ip_adresi, tarih) VALUES (?, ?)`, [
+        cleanIp,
+        tarih,
+      ]);
+    }
+
+    next();
+  });
+});
+
 app.use(express.static(path.join(__dirname)));
 app.use(express.json());
 
@@ -77,8 +140,14 @@ function tablolariKur() {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         isim TEXT NOT NULL,
         fiyat REAL NOT NULL,
-        gorsel TEXT
-    )`);
+        gorsel TEXT,
+        aciklama TEXT
+    )`, () => {
+    // Tablo daha önceden (aciklama sütunu olmadan) oluşturulmuş olabilir.
+    // Var olan veritabanlarında da çalışması için sütunu sonradan eklemeyi deniyoruz;
+    // sütun zaten varsa SQLite hata verir, o hatayı sessizce yok sayıyoruz.
+    db.run(`ALTER TABLE urunler ADD COLUMN aciklama TEXT`, () => {});
+  });
 
   // 3. Sistem Ayarları (Telegram) Tablosu
   db.run(
@@ -255,6 +324,7 @@ app.delete("/api/kategori-sil/:id", (istek, cevap) => {
 app.post("/api/urun-ekle", upload.single("urunResmi"), (istek, cevap) => {
   const isim = (istek.body.isim || "").trim();
   const fiyat = Number(istek.body.fiyat);
+  const aciklama = (istek.body.aciklama || "").trim();
 
   // Eski sürümde burada doğrulama yoktu; isim boş veya fiyat geçersiz gönderilirse
   // veritabanı satırı bozuk ekleniyor ve liste/ekleme akışı şaşırtıcı şekilde bozuluyordu.
@@ -281,8 +351,8 @@ app.post("/api/urun-ekle", upload.single("urunResmi"), (istek, cevap) => {
     gorselYolu = "images/" + istek.file.filename;
   }
 
-  const sorgu = `INSERT INTO urunler(isim, fiyat, gorsel) VALUES (?, ?, ?)`;
-  db.run(sorgu, [isim, fiyat, gorselYolu], function (hata) {
+  const sorgu = `INSERT INTO urunler(isim, fiyat, gorsel, aciklama) VALUES (?, ?, ?, ?)`;
+  db.run(sorgu, [isim, fiyat, gorselYolu, aciklama], function (hata) {
     if (hata) {
       return cevap.status(500).json({ durum: "hata", mesaj: hata.message });
     }
@@ -323,7 +393,7 @@ app.get("/api/urunler", (istek, cevap) => {
   // Tek sorguda tüm ürünleri kategorileriyle birlikte getiriyoruz (performans için)
   const sorgu = `
     SELECT
-      u.id, u.isim, u.fiyat, u.gorsel,
+      u.id, u.isim, u.fiyat, u.gorsel, u.aciklama,
       GROUP_CONCAT(k.id) as kategori_idleri,
       GROUP_CONCAT(k.isim, '||') as kategori_isimleri
     FROM urunler u
@@ -342,6 +412,7 @@ app.get("/api/urunler", (istek, cevap) => {
       isim: satir.isim,
       fiyat: satir.fiyat,
       gorsel: satir.gorsel,
+      aciklama: satir.aciklama || "",
       kategoriler: satir.kategori_idleri
         ? satir.kategori_idleri.split(",").map(Number)
         : [],
@@ -371,36 +442,9 @@ app.delete("/api/urun-sil/:id", (istek, cevap) => {
     });
   });
 });
-// --- IP YÖNETİMİ İÇİN YENİ ENDPOINT'LER ---
+// --- IP YÖNETİMİ İÇİN ENDPOINT'LER ---
 
-// 1. IP Loglama (Ziyaretçi geldiğinde kaydet)
-app.use((req, res, next) => {
-  // Sadece index.html ve ana sayfa isteklerini logla
-  if (req.path === "/" || req.path === "/index.html") {
-    const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
-    // IPv6'dan IPv4 çıkarımı (::ffff:127.0.0.1 -> 127.0.0.1)
-    const cleanIp = ip.replace("::ffff:", "");
-
-    // Banlı IP kontrolü
-    db.get(
-      `SELECT * FROM banli_ipler WHERE ip = ?`,
-      [cleanIp],
-      (err, banli) => {
-        if (!banli) {
-          // Banlı değilse logla
-          const tarih = new Date().toISOString();
-          db.run(`INSERT INTO ip_loglari (ip_adresi, tarih) VALUES (?, ?)`, [
-            cleanIp,
-            tarih,
-          ]);
-        }
-      },
-    );
-  }
-  next();
-});
-
-// 2. Tüm IP Loglarını Getir (Admin panel için)
+// 1. Tüm IP Loglarını Getir (Admin panel için)
 app.get("/api/ip-loglari", (req, res) => {
   db.all(`SELECT * FROM ip_loglari ORDER BY id DESC`, [], (err, rows) => {
     if (err) return res.status(500).json({ hata: err.message });
@@ -408,7 +452,7 @@ app.get("/api/ip-loglari", (req, res) => {
   });
 });
 
-// 3. IP Banla
+// 2. IP Banla
 app.post("/api/ip-banla", (req, res) => {
   const { ip, sebep } = req.body;
   if (!ip)
@@ -429,7 +473,7 @@ const tarih = new Date().toISOString();  db.run(
   );
 });
 
-// 4. IP Banını Kaldır
+// 3. IP Banını Kaldır
 app.delete("/api/ip-ban-kaldir/:ip", (req, res) => {
   const ip = req.params.ip;
   db.run(`DELETE FROM banli_ipler WHERE ip = ?`, [ip], function (err) {
@@ -441,7 +485,7 @@ app.delete("/api/ip-ban-kaldir/:ip", (req, res) => {
   });
 });
 
-// 5. Banlı IP Listesini Getir
+// 4. Banlı IP Listesini Getir
 app.get("/api/banli-ipler", (req, res) => {
   db.all(`SELECT * FROM banli_ipler ORDER BY id DESC`, [], (err, rows) => {
     if (err) return res.status(500).json({ hata: err.message });
@@ -449,7 +493,7 @@ app.get("/api/banli-ipler", (req, res) => {
   });
 });
 
-// 6. IP Loglarını Temizle
+// 5. IP Loglarını Temizle
 app.delete("/api/ip-loglarini-temizle", (req, res) => {
   db.run(`DELETE FROM ip_loglari`, function (err) {
     if (err) return res.status(500).json({ durum: "hata", mesaj: err.message });
